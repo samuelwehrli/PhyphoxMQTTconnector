@@ -1,0 +1,128 @@
+<phyphox xmlns="http://phyphox.org/xml" xmlns:editor="http://phyphox.org/editor/xml" version="1.7" editor:version="1.0" locale="en">
+    <title>MQTT Connector V2</title>
+    <data-containers>
+        <container size="1" static="false">AccG_X</container>
+        <container size="1" static="false">AccG_Y</container>
+        <container size="1" static="false">AccG_Z</container>
+        <!--container size="1" static="false">AccNoG_X</container>
+        <container size="1" static="false">AccNoG_Y</container>
+        <container size="1" static="false">AccNoG_Z</container-->
+        <container size="1" static="false">Proximity</container>
+        <container size="1" static="false">GyroX</container>
+        <container size="1" static="false">GyroY</container>
+        <container size="1" static="false">GyroZ</container>
+        <!--container size="1" static="false">Pressure</container-->
+        <!--container size="1" static="false">Light</container-->
+        <container size="4800">Audio</container>
+        <container size="4800">AudioSquared</container>
+        <container size="1" static="false">AudioIntegrated</container>
+        <container size="1" static="false">AudioPower</container>
+        <container size="1" static="false">Latitude</container>
+        <container size="1" static="false">Longitude</container>
+        <container size="1" static="false">Timestamp</container>
+    </data-containers>
+    <input>
+        <sensor rate="10" average="false" type="accelerometer">
+            <output component="x">AccG_X</output>
+            <output component="y">AccG_Y</output>
+            <output component="z">AccG_Z</output>
+        </sensor>
+        <!--sensor rate="10" average="false" type="linear_acceleration">
+            <output component="x">AccNoG_X</output>
+            <output component="y">AccNoG_Y</output>
+            <output component="z">AccNoG_Z</output>
+        </sensor-->
+         <sensor rate="10" average="false" type="gyroscope">
+            <output component="x">GyroX</output>
+            <output component="y">GyroY</output>
+            <output component="z">GyroZ</output>
+        </sensor>
+        <!--sensor rate="10" average="false" type="light">
+            <output component="x">Light</output>
+        </sensor-->
+        <!--sensor editor:uuid="101" rate="10" average="false" type="pressure">
+            <output component="x">Pressure</output>
+        </sensor-->
+        <sensor rate="10" average="false" type="proximity">
+            <output component="x">Proximity</output>
+        </sensor>
+        <location>
+            <output component="lat">Latitude</output>
+            <output component="lon">Longitude</output>
+        </location>
+        <audio rate="48000">
+            <output>Audio</output>
+        </audio>
+    </input>
+    <output>
+    </output>
+    <analysis sleep="0.1"  onUserInput="false">
+        <power>
+            <input as="base">Audio</input>
+            <input as="exponent" type="value">2</input>
+            <output>AudioSquared</output>
+         </power>
+         <integrate>
+            <input>AudioSquared</input>
+            <output>AudioIntegrated</output>
+        </integrate>
+        <log>
+            <input>AudioIntegrated</input>
+            <output>AudioPower</output>
+         </log>
+         <timer>
+            <output>Timestamp</output>
+         </timer>
+    </analysis>
+    <views>
+        <view label="Status">
+            <info editor:uuid="111" label="Sending data... Please check experiment info (see three dots upper right corner) for configuration instructions!" size="1.5">
+            </info>
+        </view>
+    </views>    
+    <export>
+    </export>
+    <network>
+        <connection service="mqtt/json" address="test.mosquitto.org:1883" sendTopic="zhaw/pcls/wehs/phyphox" conversion="none" interval="0.1">
+            <send clear="false" id="AccG_X" type="buffer" datatype="number">AccG_X</send>
+            <send clear="false" id="AccG_Y" type="buffer" datatype="number">AccG_Y</send>
+            <send clear="false" id="AccG_Z" type="buffer" datatype="number">AccG_Z</send>
+            <!--send clear="false" id="AccNoG_X" type="buffer" datatype="number">AccNoG_X</send>
+            <send clear="false" id="AccNoG_Y" type="buffer" datatype="number">AccNoG_Y</send>
+            <send clear="false" id="AccNoG_Z" type="buffer" datatype="number">AccNoG_Z</send-->
+            <send clear="false" id="GyroX" type="buffer" datatype="number">GyroX</send>
+            <send clear="false" id="GyroY" type="buffer" datatype="number">GyroY</send>
+            <send clear="false" id="GyroZ" type="buffer" datatype="number">GyroZ</send>
+            <!--send clear="false" id="Light" type="buffer" datatype="number">Light</send-->
+            <send clear="false" id="Proximity" type="buffer" datatype="number">Proximity</send>
+            <!--send clear="false" id="Pressure" type="buffer" datatype="number">Pressure</send-->
+            <send clear="false" id="Latitude" type="buffer" datatype="number">Latitude</send>
+            <send clear="false" id="Longitude" type="buffer" datatype="number">Longitude</send>
+            <!--send clear="false" id="Audio" type="buffer" datatype="number">Audio</send-->            
+            <send clear="false" id="AudioPower" type="buffer" datatype="number">AudioPower</send>
+            <send clear="false" id="Timestamp" type="buffer" datatype="number">Timestamp</send>
+        </connection>
+    </network>   
+    
+    
+    <category>PCLS Experiment </category>
+    <description>With this experiment, you can send sensor data to a MQTT server.
+    You need to adjust the .phyphox file for your needs. For this, locate the network
+    section in the .phyphox file, and adjust the following information:
+    1. Configure the topic of the MQTT server to 'zhaw/pcls/[Kürzel]/phyphox' in the network section
+    2. Configure (sampling) rate parameter (in Hz) in the sensor section
+    3. Configure the interval parameter (in s) in the network section as the inverse of the sampling rate
+    4. Comment in/out the sensors you need/don't need.
+
+    Note that some sensors are not available on all devices. For example, the light sensor cannot be accessed on iPhones.
+
+    Further resources:
+    </description>
+
+    <link label="Phyphox file format" highlight="false">https://phyphox.org/wiki/index.php/Phyphox_file_format</link>
+    <link label="Phyphox network connections" highlight="false">https://phyphox.org/wiki/index.php/Network_Connections</link>
+    <link label="Phyphox editor" highlight="false">https://phyphox.org/editor/</link>
+
+    <icon format="base64">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/SFm3c6+lxoekx9dPGuTbSpbpSNd7Wzk+cIAshGiLi1l3Yidr8FmXWxzCDjluZKy8iaqLyj/KZtpblxa5NKnHwGQPtwaOa8b7fH8EADZ6WUbmcRLfXMBkCUXsZuFql26S96lSZEXAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTkQABmb49HepDgQAJmUuILYsTnw/0bzhE/Fw7ekAAAAAElFTkSuQmCC</icon>
+
+</phyphox>
