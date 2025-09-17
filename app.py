@@ -22,7 +22,7 @@ try:
         label="Download mqtt_connector_v2.phyphox",
         data=phyphox_file_content,
         file_name="mqtt_connector_v2.phyphox",
-        mime="application/xml"
+        mime="application/octet-stream"
     )
 except FileNotFoundError:
     st.error(f"Error: The file '{phyphox_file_path}' was not found.")
