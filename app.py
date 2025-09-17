@@ -1,6 +1,7 @@
 import streamlit as st
 import xml.etree.ElementTree as ET
 from io import BytesIO
+import datetime
 
 st.set_page_config(
     page_title="Phyphox MQTT Connector Configurator",
@@ -15,6 +16,10 @@ st.write(
 )
 
 # --- Configuration Inputs ---
+st.header("Experiment Configuration")
+default_timestamp = datetime.datetime.now().strftime("%d%m%y-%H%M")
+experiment_id = st.text_input("Experiment ID (for filename and title)", default_timestamp)
+
 st.header("MQTT Configuration")
 mqtt_address = st.text_input("Server Address", "test.mosquitto.org:1883")
 mqtt_topic = st.text_input("Topic", "zhaw/pcls/wehs/phyphox")
@@ -25,7 +30,7 @@ network_interval = st.number_input("Network Interval (s)", min_value=0.1, max_va
 
 
 # --- XML Modification Logic ---
-def generate_phyphox_file(address, topic, rate, interval):
+def generate_phyphox_file(address, topic, rate, interval, exp_id):
     """
     Parses the base phyphox file, updates it with user settings,
     and returns the modified XML content as bytes.
@@ -36,9 +41,15 @@ def generate_phyphox_file(address, topic, rate, interval):
     tree = ET.parse(base_phyphox_file_path)
     root = tree.getroot()
     
-    # Find and update the network connection settings
     # The namespace is required for find()
     ns = {'p': 'http://phyphox.org/xml'}
+    
+    # Find and update the title
+    title_element = root.find('p:title', ns)
+    if title_element is not None:
+        title_element.text = f"MQTT Connector {exp_id}"
+    
+    # Find and update the network connection settings
     connection_element = root.find('p:network/p:connection', ns)
     if connection_element is not None:
         connection_element.set('address', address)
@@ -75,14 +86,16 @@ try:
         mqtt_address,
         mqtt_topic,
         sensor_rate,
-        network_interval
+        network_interval,
+        experiment_id
     )
 
     st.header("Download")
+    download_filename = f"mqtt_connector_{experiment_id}.phyphox"
     st.download_button(
         label="Download customized .phyphox file",
         data=modified_phyphox_content,
-        file_name="mqtt_connector_v2.phyphox",
+        file_name=download_filename,
         mime="application/octet-stream"
     )
 except FileNotFoundError:
