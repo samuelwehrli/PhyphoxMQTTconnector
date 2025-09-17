@@ -52,7 +52,7 @@ def _update_info_view(root, ns, address, topic, rate, interval, enable_light, en
             info_lines.append("Enabled Optional Sensors:")
             info_lines.extend([f"- {sensor}" for sensor in enabled_sensors])
 
-        info_text = "\\n".join(info_lines)
+        info_text = "&#10;".join(info_lines)
         info_element.set('label', info_text)
 
 def _set_all_sensor_rates(root, ns, rate):
