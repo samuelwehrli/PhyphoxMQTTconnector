@@ -2,6 +2,7 @@ import streamlit as st
 import xml.etree.ElementTree as ET
 from io import BytesIO
 import datetime
+import pytz
 
 st.set_page_config(
     page_title="Phyphox MQTT Connector Configurator",
@@ -17,7 +18,15 @@ st.write(
 
 # --- Configuration Inputs ---
 st.header("Experiment Configuration")
-default_timestamp = datetime.datetime.now().strftime("%d%m%y-%H%M")
+
+# Timezone selection
+timezones = pytz.all_timezones
+default_tz_index = timezones.index('Europe/Zurich') if 'Europe/Zurich' in timezones else 0
+selected_timezone = st.selectbox("Select your timezone", timezones, index=default_tz_index)
+
+# Generate timestamp based on selected timezone
+tz = pytz.timezone(selected_timezone)
+default_timestamp = datetime.datetime.now(tz).strftime("%d%m%y-%H%M")
 experiment_id = st.text_input("Experiment ID (for filename and title)", default_timestamp)
 
 st.header("MQTT Configuration")
@@ -47,7 +56,7 @@ def generate_phyphox_file(address, topic, rate, interval, exp_id):
     # Find and update the title
     title_element = root.find('p:title', ns)
     if title_element is not None:
-        title_element.text = f"MQTT Connector {exp_id}"
+        title_element.text = f"MQTT-Connect {exp_id}"
     
     # Find and update the network connection settings
     connection_element = root.find('p:network/p:connection', ns)
@@ -91,7 +100,7 @@ try:
     )
 
     st.header("Download")
-    download_filename = f"mqtt_connector_{experiment_id}.phyphox"
+    download_filename = f"MQTT-Connect_{experiment_id}.phyphox"
     st.download_button(
         label="Download customized .phyphox file",
         data=modified_phyphox_content,
