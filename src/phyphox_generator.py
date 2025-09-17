@@ -31,18 +31,17 @@ def _set_mqtt_connection(root, ns, address, topic, interval):
     return connection_element
 
 def _update_info_view(root, ns, address, topic, rate, interval, enable_light, enable_pressure):
-    """Updates the info view with the current settings."""
+    """Updates the info view with the current settings in a single, compact line."""
     info_element = root.find('p:views/p:view/p:info', ns)
     if info_element is not None:
-        # Clear the old label attribute as we are now using the tag's text content
-        if 'label' in info_element.attrib:
-            del info_element.attrib['label']
+        # Ensure the element has no text content from previous attempts
+        info_element.text = None
 
-        info_lines = [
-            f"MQTT Address: {address}",
-            f"MQTT Topic: {topic}",
-            f"Sensor Rate: {rate} Hz",
-            f"Network Interval: {interval} s"
+        parts = [
+            f"server={address}",
+            f"topic={topic}",
+            f"rate={rate}Hz",
+            f"interval={interval}s"
         ]
 
         enabled_sensors = []
@@ -52,13 +51,10 @@ def _update_info_view(root, ns, address, topic, rate, interval, enable_light, en
             enabled_sensors.append("Pressure")
 
         if enabled_sensors:
-            info_lines.append("")  # Add a blank line for spacing
-            info_lines.append("Enabled Optional Sensors:")
-            info_lines.extend([f"- {sensor}" for sensor in enabled_sensors])
+            parts.append(f"add_sensors=[{', '.join(enabled_sensors)}]")
 
-        # Use a CDATA section to preserve newlines for Phyphox
-        cdata_text = "\\n".join(info_lines)
-        info_element.text = f"<![CDATA[\\n{cdata_text}\\n]]>"
+        info_text = "; ".join(parts)
+        info_element.set('label', info_text)
 
 
 def _set_all_sensor_rates(root, ns, rate):
@@ -122,12 +118,7 @@ def _convert_tree_to_bytes(tree):
     """Converts the final XML tree to a byte stream for download."""
     output_buffer = BytesIO()
     tree.write(output_buffer, encoding='utf-8', xml_declaration=True)
-    
-    # The CDATA trick makes this unnecessary now, but we need to un-escape the CDATA tags themselves.
-    xml_bytes = output_buffer.getvalue()
-    corrected_xml_bytes = xml_bytes.replace(b'&lt;![CDATA[', b'<![CDATA[').replace(b']]&gt;', b']]>')
-    
-    return corrected_xml_bytes
+    return output_buffer.getvalue()
 
 # --- Public Main Function ---
 

@@ -104,21 +104,13 @@
         </connection>
     </network>   
     
-    
     <category>PCLS Experiment </category>
     <description>With this experiment, you can send sensor data to a MQTT server.
-    You need to adjust the .phyphox file for your needs. For this, locate the network
-    section in the .phyphox file, and adjust the following information:
-    1. Configure the topic of the MQTT server to 'zhaw/pcls/[Kürzel]/phyphox' in the network section
-    2. Configure (sampling) rate parameter (in Hz) in the sensor section
-    3. Configure the interval parameter (in s) in the network section as the inverse of the sampling rate
-    4. Comment in/out the sensors you need/don't need.
-
-    Note that some sensors are not available on all devices. For example, the light sensor cannot be accessed on iPhones.
-
+    
     Further resources:
     </description>
 
+    <link label="Streamlit MQTT Connector Configurator" highlight="false">https://phyphox-mqtt-connector.streamlit.app</link>
     <link label="Phyphox file format" highlight="false">https://phyphox.org/wiki/index.php/Phyphox_file_format</link>
     <link label="Phyphox network connections" highlight="false">https://phyphox.org/wiki/index.php/Network_Connections</link>
     <link label="Phyphox editor" highlight="false">https://phyphox.org/editor/</link>
