@@ -30,16 +30,29 @@ def _set_mqtt_connection(root, ns, address, topic, interval):
         connection_element.set('interval', str(interval))
     return connection_element
 
-def _update_info_view(root, ns, address, topic, rate, interval):
+def _update_info_view(root, ns, address, topic, rate, interval, enable_light, enable_pressure):
     """Updates the info view with the current settings."""
     info_element = root.find('p:views/p:view/p:info', ns)
     if info_element is not None:
-        info_text = (
-            f"MQTT Address: {address}\\n"
-            f"MQTT Topic: {topic}\\n"
-            f"Sensor Rate: {rate} Hz\\n"
+        info_lines = [
+            f"MQTT Address: {address}",
+            f"MQTT Topic: {topic}",
+            f"Sensor Rate: {rate} Hz",
             f"Network Interval: {interval} s"
-        )
+        ]
+
+        enabled_sensors = []
+        if enable_light:
+            enabled_sensors.append("Light")
+        if enable_pressure:
+            enabled_sensors.append("Pressure")
+
+        if enabled_sensors:
+            info_lines.append("")  # Add a blank line for spacing
+            info_lines.append("Enabled Optional Sensors:")
+            info_lines.extend([f"- {sensor}" for sensor in enabled_sensors])
+
+        info_text = "\\n".join(info_lines)
         info_element.set('label', info_text)
 
 def _set_all_sensor_rates(root, ns, rate):
@@ -118,7 +131,7 @@ def generate_phyphox_file(address, topic, rate, interval, exp_id, enable_light, 
         _set_title(root, ns, exp_id)
         connection_element = _set_mqtt_connection(root, ns, address, topic, interval)
         _set_all_sensor_rates(root, ns, rate)
-        _update_info_view(root, ns, address, topic, rate, interval)
+        _update_info_view(root, ns, address, topic, rate, interval, enable_light, enable_pressure)
         
         if enable_light:
             _add_light_sensor(root, ns, rate, connection_element)
