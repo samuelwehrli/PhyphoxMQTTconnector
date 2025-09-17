@@ -34,6 +34,10 @@ def _update_info_view(root, ns, address, topic, rate, interval, enable_light, en
     """Updates the info view with the current settings."""
     info_element = root.find('p:views/p:view/p:info', ns)
     if info_element is not None:
+        # Clear the old label attribute as we are now using the tag's text content
+        if 'label' in info_element.attrib:
+            del info_element.attrib['label']
+
         info_lines = [
             f"MQTT Address: {address}",
             f"MQTT Topic: {topic}",
@@ -52,8 +56,10 @@ def _update_info_view(root, ns, address, topic, rate, interval, enable_light, en
             info_lines.append("Enabled Optional Sensors:")
             info_lines.extend([f"- {sensor}" for sensor in enabled_sensors])
 
-        info_text = "&#10;".join(info_lines)
-        info_element.set('label', info_text)
+        # Use a CDATA section to preserve newlines for Phyphox
+        cdata_text = "\\n".join(info_lines)
+        info_element.text = f"<![CDATA[\\n{cdata_text}\\n]]>"
+
 
 def _set_all_sensor_rates(root, ns, rate):
     """Sets the sampling rate for all existing sensors."""
@@ -117,9 +123,9 @@ def _convert_tree_to_bytes(tree):
     output_buffer = BytesIO()
     tree.write(output_buffer, encoding='utf-8', xml_declaration=True)
     
-    # Post-process to fix the escaped newline characters for Phyphox
+    # The CDATA trick makes this unnecessary now, but we need to un-escape the CDATA tags themselves.
     xml_bytes = output_buffer.getvalue()
-    corrected_xml_bytes = xml_bytes.replace(b'&amp;#10;', b'&#10;')
+    corrected_xml_bytes = xml_bytes.replace(b'&lt;![CDATA[', b'<![CDATA[').replace(b']]&gt;', b']]>')
     
     return corrected_xml_bytes
 
