@@ -19,7 +19,7 @@ st.write(
 # --- Main Configuration ---
 st.header("MQTT Configuration")
 mqtt_address = st.text_input("Server Address", "test.mosquitto.org:1883")
-mqtt_topic = st.text_input("Topic", "zhaw/pcls/wehs/phyphox")
+mqtt_topic = st.text_input("Topic", "zhaw/pcls/phyphox/[Kürzel]")
 
 # --- Optional Sensors ---
 st.header("Optional Sensors")
@@ -45,29 +45,31 @@ with st.expander("Advanced Settings"):
     network_interval = st.number_input("Network Interval (s)", min_value=0.1, max_value=10.0, value=0.1, step=0.1, format="%.1f")
 
 
-# --- File Generation and Download ---
-
-# Generate the file content on-the-fly based on user input
-modified_phyphox_content = generate_phyphox_file(
-    mqtt_address,
-    mqtt_topic,
-    sensor_rate,
-    network_interval,
-    experiment_id,
-    enable_light_sensor,
-    enable_pressure_sensor
-)
-
-st.header("Download")
-
-# Check if the generator returned an error string
-if isinstance(modified_phyphox_content, str) and modified_phyphox_content.startswith("Error:"):
-    st.error(modified_phyphox_content)
+# --- Conditional Download Button ---
+if "[Kürzel]" in mqtt_topic:
+    st.warning("Please replace '[Kürzel]' in the topic with your personal abbreviation to enable the download button.")
 else:
-    download_filename = f"MQTT-Connect_{experiment_id}.phyphox"
-    st.download_button(
-        label="Download customized .phyphox file",
-        data=modified_phyphox_content,
-        file_name=download_filename,
-        mime="application/octet-stream"
+    # Generate the file content on-the-fly based on user input
+    modified_phyphox_content = generate_phyphox_file(
+        mqtt_address,
+        mqtt_topic,
+        sensor_rate,
+        network_interval,
+        experiment_id,
+        enable_light_sensor,
+        enable_pressure_sensor
     )
+
+    st.header("Download")
+
+    # Check if the generator returned an error string
+    if isinstance(modified_phyphox_content, str) and modified_phyphox_content.startswith("Error:"):
+        st.error(modified_phyphox_content)
+    else:
+        download_filename = f"MQTT-Connect_{experiment_id}.phyphox"
+        st.download_button(
+            label="Download customized .phyphox file",
+            data=modified_phyphox_content,
+            file_name=download_filename,
+            mime="application/octet-stream"
+        )
