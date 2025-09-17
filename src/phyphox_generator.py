@@ -116,7 +116,12 @@ def _convert_tree_to_bytes(tree):
     """Converts the final XML tree to a byte stream for download."""
     output_buffer = BytesIO()
     tree.write(output_buffer, encoding='utf-8', xml_declaration=True)
-    return output_buffer.getvalue()
+    
+    # Post-process to fix the escaped newline characters for Phyphox
+    xml_bytes = output_buffer.getvalue()
+    corrected_xml_bytes = xml_bytes.replace(b'&amp;#10;', b'&#10;')
+    
+    return corrected_xml_bytes
 
 # --- Public Main Function ---
 
