@@ -60,7 +60,7 @@ def _update_info_view(root, ns, address, topic, rate, interval, enable_light, en
 
         info_text = "; ".join(parts)
         info_element.set('label', info_text)
-        st.write(info_text)
+        # st.write(info_text)
 
 
 def _set_all_sensor_rates(root, ns, rate):
