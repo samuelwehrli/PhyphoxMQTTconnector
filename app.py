@@ -39,7 +39,7 @@ with st.expander("Advanced Settings"):
 
     # Generate timestamp based on selected timezone
     tz = pytz.timezone(selected_timezone)
-    default_timestamp = datetime.datetime.now(tz).strftime("%d%m%y-%H%M")
+    default_timestamp = datetime.datetime.now(tz).strftime("%y%m%d-%H%M")
     experiment_id = st.text_input("Experiment ID (for filename and title)", default_timestamp)
 
     st.subheader("Sensor and Network Configuration")
