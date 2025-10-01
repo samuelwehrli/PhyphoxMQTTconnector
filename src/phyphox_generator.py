@@ -30,7 +30,7 @@ def _set_mqtt_connection(root, ns, address, topic, interval):
         connection_element.set('interval', str(interval))
     return connection_element
 
-def _update_info_view(root, ns, address, topic, rate, interval, enable_light, enable_pressure):
+def _update_info_view(root, ns, address, topic, rate, interval, enable_light, enable_pressure, enable_depth, enable_magnetometer):
     """Updates the info view with the current settings in a single, compact line."""
     info_element = root.find('p:views/p:view/p:info', ns)
     if info_element is not None:
@@ -49,6 +49,10 @@ def _update_info_view(root, ns, address, topic, rate, interval, enable_light, en
             enabled_sensors.append("Light")
         if enable_pressure:
             enabled_sensors.append("Pressure")
+        if enable_depth:
+            enabled_sensors.append("Depth")
+        if enable_magnetometer:
+            enabled_sensors.append("Magnetometer")
 
         if enabled_sensors:
             parts.append(f"add_sensors=[{', '.join(enabled_sensors)}]")
@@ -193,7 +197,7 @@ def generate_phyphox_file(address, topic, rate, interval, exp_id, enable_light, 
         _set_title(root, ns, exp_id)
         connection_element = _set_mqtt_connection(root, ns, address, topic, interval)
         _set_all_sensor_rates(root, ns, rate)
-        _update_info_view(root, ns, address, topic, rate, interval, enable_light, enable_pressure)
+        _update_info_view(root, ns, address, topic, rate, interval, enable_light, enable_pressure, enable_depth, enable_magnetometer)
         
         if enable_light:
             _add_light_sensor(root, ns, rate, connection_element)
