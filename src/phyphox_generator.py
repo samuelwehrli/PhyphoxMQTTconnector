@@ -114,6 +114,66 @@ def _add_pressure_sensor(root, ns, rate, connection_element):
             {'clear': 'false', 'id': 'Pressure', 'type': 'buffer', 'datatype': 'number'}
         ).text = 'Pressure'
 
+def _add_depth_sensor(root, ns, connection_element):
+    """Dynamically adds the depth (LiDAR) sensor elements to the XML tree."""
+    # 1. Add data container
+    data_containers_element = root.find('p:data-containers', ns)
+    if data_containers_element is not None:
+        ET.SubElement(
+            data_containers_element, 'container',
+            {'size': '1', 'static': 'false'}
+        ).text = 'Depth'
+
+    # 2. Add sensor input
+    input_element = root.find('p:input', ns)
+    if input_element is not None:
+        depth_sensor_el = ET.SubElement(
+            input_element, 'depth',
+            {'x1': '0.4', 'x2': '0.6', 'y1': '0.4', 'y2': '0.6', 'mode': 'average'}
+        )
+        ET.SubElement(depth_sensor_el, 'output', {'component': 'z'}).text = 'Depth'
+
+    # 3. Add network send rule
+    if connection_element is not None:
+        ET.SubElement(
+            connection_element, 'send',
+            {'clear': 'false', 'id': 'Depth', 'type': 'buffer', 'datatype': 'number'}
+        ).text = 'Depth'
+
+def _add_magnetometer(root, ns, rate, connection_element):
+    """Dynamically adds the magnetometer elements to the XML tree."""
+    # 1. Define the components to create
+    components = ['MagX', 'MagY', 'MagZ', 'MagAccuracy']
+    
+    # 2. Add data containers for each component
+    data_containers_element = root.find('p:data-containers', ns)
+    if data_containers_element is not None:
+        for comp in components:
+            ET.SubElement(
+                data_containers_element, 'container',
+                {'size': '1', 'static': 'false'}
+            ).text = comp
+
+    # 3. Add the single sensor input with multiple outputs
+    input_element = root.find('p:input', ns)
+    if input_element is not None:
+        mag_sensor_el = ET.SubElement(
+            input_element, 'sensor',
+            {'rate': str(rate), 'average': 'false', 'type': 'magnetic_field'}
+        )
+        ET.SubElement(mag_sensor_el, 'output', {'component': 'x'}).text = 'MagX'
+        ET.SubElement(mag_sensor_el, 'output', {'component': 'y'}).text = 'MagY'
+        ET.SubElement(mag_sensor_el, 'output', {'component': 'z'}).text = 'MagZ'
+        ET.SubElement(mag_sensor_el, 'output', {'component': 'accuracy'}).text = 'MagAccuracy'
+
+    # 4. Add network send rules for each component
+    if connection_element is not None:
+        for comp in components:
+            ET.SubElement(
+                connection_element, 'send',
+                {'clear': 'false', 'id': comp, 'type': 'buffer', 'datatype': 'number'}
+            ).text = comp
+
 def _convert_tree_to_bytes(tree):
     """Converts the final XML tree to a byte stream for download."""
     output_buffer = BytesIO()
@@ -122,7 +182,7 @@ def _convert_tree_to_bytes(tree):
 
 # --- Public Main Function ---
 
-def generate_phyphox_file(address, topic, rate, interval, exp_id, enable_light, enable_pressure):
+def generate_phyphox_file(address, topic, rate, interval, exp_id, enable_light, enable_pressure, enable_depth, enable_magnetometer):
     """
     Parses the base phyphox file, updates it with user settings,
     and returns the modified XML content as bytes.
@@ -141,6 +201,12 @@ def generate_phyphox_file(address, topic, rate, interval, exp_id, enable_light, 
         if enable_pressure:
             _add_pressure_sensor(root, ns, rate, connection_element)
             
+        if enable_depth:
+            _add_depth_sensor(root, ns, connection_element)
+
+        if enable_magnetometer:
+            _add_magnetometer(root, ns, rate, connection_element)
+
         return _convert_tree_to_bytes(tree)
         
     except FileNotFoundError:

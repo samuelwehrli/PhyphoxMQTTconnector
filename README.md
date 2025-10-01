@@ -41,3 +41,7 @@ The project is organized to separate the user interface from the core logic:
     ```
 
 The application will open in a new browser tab.
+
+## Phyphox
+
+- [Link](https://github.com/phyphox) to source code

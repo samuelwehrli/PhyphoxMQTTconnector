@@ -25,6 +25,8 @@ mqtt_topic = st.text_input("Topic", "zhaw/pcls/phyphox/[Kürzel]")
 st.header("Optional Sensors")
 enable_light_sensor = st.checkbox("Enable Light Sensor (on some Android devices)")
 enable_pressure_sensor = st.checkbox("Enable Pressure Sensor (Iphones & some Android devices)")
+enable_depth_sensor = st.checkbox("Enable Depth Sensor (LiDAR)")
+enable_magnetometer = st.checkbox("Enable Magnetometer (X, Y, Z, Accuracy)")
 
 # --- Advanced Settings Expander ---
 with st.expander("Advanced Settings"):
@@ -57,7 +59,9 @@ else:
         network_interval,
         experiment_id,
         enable_light_sensor,
-        enable_pressure_sensor
+        enable_pressure_sensor,
+        enable_depth_sensor,
+        enable_magnetometer
     )
 
     st.header("Download")
