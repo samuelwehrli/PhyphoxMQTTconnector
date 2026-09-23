@@ -31,7 +31,7 @@ def _set_mqtt_connection(root, ns, address, topic, interval):
         connection_element.set('interval', str(interval))
     return connection_element
 
-def _update_info_view(root, ns, address, topic, rate, interval, enable_light, enable_pressure, enable_depth, enable_magnetometer):
+def _update_info_view(root, ns, address, topic, rate, interval, enable_light, enable_pressure, enable_depth, enable_magnetometer, enable_color):
     """Updates the info view with the current settings in a single, compact line."""
     info_element = root.find('p:views/p:view/p:info', ns)
     if info_element is not None:
@@ -54,6 +54,8 @@ def _update_info_view(root, ns, address, topic, rate, interval, enable_light, en
             enabled_sensors.append("Depth")
         if enable_magnetometer:
             enabled_sensors.append("Magnetometer")
+        if enable_color:
+            enabled_sensors.append("Color")
 
         if enabled_sensors:
             parts.append(f"add_sensors=[{', '.join(enabled_sensors)}]")
@@ -180,6 +182,48 @@ def _add_magnetometer(root, ns, rate, connection_element):
                 {'clear': 'false', 'id': comp, 'type': 'buffer', 'datatype': 'number'}
             ).text = comp
 
+def _add_color_sensor(root, ns, connection_element):
+    """Dynamically adds a camera-based HSV color sensor to the XML tree.
+
+    Unlike the raw ambient light sensor (lux only, often unavailable on
+    iPhones), this samples a region of the camera preview and reports
+    Hue/Saturation/Value, matching phyphox's official camera-hsv experiment.
+    """
+    components = ['Hue', 'Saturation', 'Value']
+
+    # 1. Add data containers
+    data_containers_element = root.find('p:data-containers', ns)
+    if data_containers_element is not None:
+        for comp in components:
+            ET.SubElement(
+                data_containers_element, 'container',
+                {'size': '1', 'static': 'false'}
+            ).text = comp
+
+    # 2. Add the camera input with hue/saturation/value outputs
+    input_element = root.find('p:input', ns)
+    if input_element is not None:
+        camera_el = ET.SubElement(
+            input_element, 'camera',
+            {
+                'auto_exposure': 'true',
+                'feature': 'photometric',
+                'x1': '0.4', 'x2': '0.6',
+                'y1': '0.4', 'y2': '0.6',
+            }
+        )
+        ET.SubElement(camera_el, 'output', {'component': 'hue'}).text = 'Hue'
+        ET.SubElement(camera_el, 'output', {'component': 'saturation'}).text = 'Saturation'
+        ET.SubElement(camera_el, 'output', {'component': 'value'}).text = 'Value'
+
+    # 3. Add network send rules for each component
+    if connection_element is not None:
+        for comp in components:
+            ET.SubElement(
+                connection_element, 'send',
+                {'clear': 'false', 'id': comp, 'type': 'buffer', 'datatype': 'number'}
+            ).text = comp
+
 def _convert_tree_to_bytes(tree):
     """Converts the final XML tree to a byte stream for download."""
     output_buffer = BytesIO()
@@ -188,7 +232,7 @@ def _convert_tree_to_bytes(tree):
 
 # --- Public Main Function ---
 
-def generate_phyphox_file(address, topic, rate, interval, exp_id, enable_light, enable_pressure, enable_depth, enable_magnetometer):
+def generate_phyphox_file(address, topic, rate, interval, exp_id, enable_light, enable_pressure, enable_depth, enable_magnetometer, enable_color=False):
     """
     Parses the base phyphox file, updates it with user settings,
     and returns the modified XML content as bytes.
@@ -199,19 +243,22 @@ def generate_phyphox_file(address, topic, rate, interval, exp_id, enable_light, 
         _set_title(root, ns, exp_id)
         connection_element = _set_mqtt_connection(root, ns, address, topic, interval)
         _set_all_sensor_rates(root, ns, rate)
-        _update_info_view(root, ns, address, topic, rate, interval, enable_light, enable_pressure, enable_depth, enable_magnetometer)
-        
+        _update_info_view(root, ns, address, topic, rate, interval, enable_light, enable_pressure, enable_depth, enable_magnetometer, enable_color)
+
         if enable_light:
             _add_light_sensor(root, ns, rate, connection_element)
 
         if enable_pressure:
             _add_pressure_sensor(root, ns, rate, connection_element)
-            
+
         if enable_depth:
             _add_depth_sensor(root, ns, connection_element)
 
         if enable_magnetometer:
             _add_magnetometer(root, ns, rate, connection_element)
+
+        if enable_color:
+            _add_color_sensor(root, ns, connection_element)
 
         return _convert_tree_to_bytes(tree)
         

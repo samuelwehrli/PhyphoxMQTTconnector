@@ -27,6 +27,7 @@ enable_light_sensor = st.checkbox("Enable Light Sensor (on some Android devices)
 enable_pressure_sensor = st.checkbox("Enable Pressure Sensor (Iphones & some Android devices)")
 enable_depth_sensor = st.checkbox("Enable Depth Sensor (LiDAR)")
 enable_magnetometer = st.checkbox("Enable Magnetometer (X, Y, Z, Accuracy)")
+enable_color_sensor = st.checkbox("Enable Color Sensor (Camera HSV: Hue, Saturation, Value)")
 
 # --- Advanced Settings Expander ---
 with st.expander("Advanced Settings"):
@@ -61,7 +62,8 @@ else:
         enable_light_sensor,
         enable_pressure_sensor,
         enable_depth_sensor,
-        enable_magnetometer
+        enable_magnetometer,
+        enable_color_sensor
     )
 
     st.header("Download")

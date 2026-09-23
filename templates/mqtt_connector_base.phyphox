@@ -1,4 +1,4 @@
-<phyphox xmlns="http://phyphox.org/xml" xmlns:editor="http://phyphox.org/editor/xml" version="1.7" editor:version="1.0" locale="en">
+<phyphox xmlns="http://phyphox.org/xml" xmlns:editor="http://phyphox.org/editor/xml" version="1.14" editor:version="1.0" locale="en">
     <title>MQTT Connector V2</title>
     <data-containers>
         <container size="1" static="false">AccG_X</container>
