@@ -1,2 +1,2 @@
-streamlit
-pytz
+streamlit==1.64.0
+pytz==2026.3.post1
