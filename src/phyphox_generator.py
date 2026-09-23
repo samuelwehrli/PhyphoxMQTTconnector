@@ -189,7 +189,7 @@ def _add_color_sensor(root, ns, connection_element):
     iPhones), this samples a region of the camera preview and reports
     Hue/Saturation/Value, matching phyphox's official camera-hsv experiment.
     """
-    components = ['Hue', 'Saturation', 'Value']
+    components = ['CamHue', 'CamSaturation', 'CamHSVValue']
 
     # 1. Add data containers
     data_containers_element = root.find('p:data-containers', ns)
@@ -212,9 +212,9 @@ def _add_color_sensor(root, ns, connection_element):
                 'y1': '0.4', 'y2': '0.6',
             }
         )
-        ET.SubElement(camera_el, 'output', {'component': 'hue'}).text = 'Hue'
-        ET.SubElement(camera_el, 'output', {'component': 'saturation'}).text = 'Saturation'
-        ET.SubElement(camera_el, 'output', {'component': 'value'}).text = 'Value'
+        ET.SubElement(camera_el, 'output', {'component': 'hue'}).text = 'CamHue'
+        ET.SubElement(camera_el, 'output', {'component': 'saturation'}).text = 'CamSaturation'
+        ET.SubElement(camera_el, 'output', {'component': 'value'}).text = 'CamHSVValue'
 
     # 3. Add network send rules for each component
     if connection_element is not None:
