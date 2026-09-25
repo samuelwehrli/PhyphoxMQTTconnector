@@ -45,7 +45,7 @@ with st.expander("Advanced Settings"):
 
     st.subheader("Sensor and Network Configuration")
     sensor_rate = st.number_input("Sensor Rate (Hz)", min_value=1, max_value=100, value=10, step=1)
-    network_interval = st.number_input("Network Interval (s)", min_value=0.1, max_value=10.0, value=0.1, step=0.1, format="%.1f")
+    network_interval = st.number_input("Network Interval (s)", min_value=0.001, max_value=10.0, value=0.1, step=0.1, format="%.1f")
 
 
 # --- Conditional Download Button ---
