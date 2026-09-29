@@ -22,16 +22,46 @@ def _set_title(root, ns, exp_id):
     if title_element is not None:
         title_element.text = f"MQTT-Connect {exp_id}"
 
-def _set_mqtt_connection(root, ns, address, topic, interval):
-    """Configures the MQTT connection settings."""
+def _set_mqtt_connection(root, ns, address, topic, rate):
+    """Configures the MQTT connection settings.
+
+    Phyphox's network `interval` (not the sensor `rate`) is what actually
+    determines how often data is pushed over MQTT, since each data
+    container only holds the latest sample (size="1"). To make the
+    configured frequency actually take effect, the send interval is
+    derived directly from it instead of being set independently.
+    """
     connection_element = root.find('p:network/p:connection', ns)
     if connection_element is not None:
+        interval = round(1.0 / rate, 6)
         connection_element.set('address', address)
         connection_element.set('sendTopic', topic)
         connection_element.set('interval', str(interval))
     return connection_element
 
-def _update_info_view(root, ns, address, topic, rate, interval, enable_light, enable_pressure, enable_depth, enable_magnetometer, enable_color):
+def _set_analysis_sleep(root, ns):
+    """Lets the analysis loop run as fast as phyphox allows.
+
+    Phyphox only triggers network sends in between analysis runs, so the
+    analysis block's own `sleep` attribute (time between runs) silently
+    caps the achievable MQTT rate even when the connection `interval` is
+    set correctly. The base template hardcoded sleep="0.1" (~10 Hz), which
+    is why requesting e.g. 50 Hz previously topped out around 8-10 Hz.
+
+    Tying sleep to 1/rate (an earlier attempt) still fell short: each loop
+    iteration also does real work (audio power/integrate/log/timer), so the
+    actual loop period is sleep + execution time - always a bit slower than
+    the nominal sleep. Setting sleep to 0 instead removes that self-imposed
+    ceiling entirely, so the loop runs at phyphox's own internal floor
+    (~10ms / ~100 Hz per the phyphox docs), giving the network `interval`
+    the tightest possible polling granularity regardless of the requested
+    rate - well above the 1-50 Hz range this connector supports.
+    """
+    analysis_element = root.find('p:analysis', ns)
+    if analysis_element is not None:
+        analysis_element.set('sleep', '0')
+
+def _update_info_view(root, ns, address, topic, rate, enable_light, enable_pressure, enable_depth, enable_magnetometer, enable_color):
     """Updates the info view with the current settings in a single, compact line."""
     info_element = root.find('p:views/p:view/p:info', ns)
     if info_element is not None:
@@ -42,7 +72,6 @@ def _update_info_view(root, ns, address, topic, rate, interval, enable_light, en
             f"server={address}",
             f"topic={topic}",
             f"rate={rate}Hz",
-            f"interval={interval}s"
         ]
 
         enabled_sensors = []
@@ -232,7 +261,7 @@ def _convert_tree_to_bytes(tree):
 
 # --- Public Main Function ---
 
-def generate_phyphox_file(address, topic, rate, interval, exp_id, enable_light, enable_pressure, enable_depth, enable_magnetometer, enable_color=False):
+def generate_phyphox_file(address, topic, rate, exp_id, enable_light, enable_pressure, enable_depth, enable_magnetometer, enable_color=False):
     """
     Parses the base phyphox file, updates it with user settings,
     and returns the modified XML content as bytes.
@@ -241,9 +270,10 @@ def generate_phyphox_file(address, topic, rate, interval, exp_id, enable_light, 
         tree, root, ns = _parse_base_file()
 
         _set_title(root, ns, exp_id)
-        connection_element = _set_mqtt_connection(root, ns, address, topic, interval)
+        connection_element = _set_mqtt_connection(root, ns, address, topic, rate)
+        _set_analysis_sleep(root, ns)
         _set_all_sensor_rates(root, ns, rate)
-        _update_info_view(root, ns, address, topic, rate, interval, enable_light, enable_pressure, enable_depth, enable_magnetometer, enable_color)
+        _update_info_view(root, ns, address, topic, rate, enable_light, enable_pressure, enable_depth, enable_magnetometer, enable_color)
 
         if enable_light:
             _add_light_sensor(root, ns, rate, connection_element)

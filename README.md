@@ -4,7 +4,7 @@ This is a Streamlit web application that allows you to dynamically configure and
 
 ## Features
 
-- **Dynamic Configuration**: Set MQTT server, topic, sensor rate, and network interval.
+- **Dynamic Configuration**: Set MQTT server, topic, and frequency (1–50 Hz), which drives both the sensor sampling rate and the MQTT send rate.
 - **Customizable ID**: Assign a unique ID to each experiment, which is used for the filename and the in-app title.
 - **Timezone Support**: Select your local timezone to ensure accurate timestamps.
 - **Optional Sensors**: Easily enable or disable specific sensors (like the light sensor).

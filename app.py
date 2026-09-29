@@ -44,8 +44,14 @@ with st.expander("Advanced Settings"):
     experiment_id = st.text_input("Experiment ID (for filename and title)", default_timestamp)
 
     st.subheader("Sensor and Network Configuration")
-    sensor_rate = st.number_input("Sensor Rate (Hz)", min_value=1, max_value=100, value=10, step=1)
-    network_interval = st.number_input("Network Interval (s)", min_value=0.001, max_value=10.0, value=0.1, step=0.1, format="%.3f")
+    frequency = st.number_input(
+        "Frequency (Hz, 1-50)",
+        min_value=1,
+        max_value=50,
+        value=10,
+        step=1,
+        help="Sensor sampling rate and MQTT send rate (both driven by the same value). Allowed range: 1-50 Hz, in whole-number steps."
+    )
 
 
 # --- Conditional Download Button ---
@@ -56,8 +62,7 @@ else:
     modified_phyphox_content = generate_phyphox_file(
         mqtt_address,
         mqtt_topic,
-        sensor_rate,
-        network_interval,
+        frequency,
         experiment_id,
         enable_light_sensor,
         enable_pressure_sensor,
