@@ -39,8 +39,8 @@ def _set_mqtt_connection(root, ns, address, topic, rate):
         connection_element.set('interval', str(interval))
     return connection_element
 
-def _set_analysis_sleep(root, ns):
-    """Lets the analysis loop run as fast as phyphox allows.
+def _set_analysis_sleep(root, ns, rate):
+    """Paces the analysis loop to keep up with the requested send rate.
 
     Phyphox only triggers network sends in between analysis runs, so the
     analysis block's own `sleep` attribute (time between runs) silently
@@ -48,18 +48,19 @@ def _set_analysis_sleep(root, ns):
     set correctly. The base template hardcoded sleep="0.1" (~10 Hz), which
     is why requesting e.g. 50 Hz previously topped out around 8-10 Hz.
 
-    Tying sleep to 1/rate (an earlier attempt) still fell short: each loop
-    iteration also does real work (audio power/integrate/log/timer), so the
-    actual loop period is sleep + execution time - always a bit slower than
-    the nominal sleep. Setting sleep to 0 instead removes that self-imposed
-    ceiling entirely, so the loop runs at phyphox's own internal floor
-    (~10ms / ~100 Hz per the phyphox docs), giving the network `interval`
-    the tightest possible polling granularity regardless of the requested
-    rate - well above the 1-50 Hz range this connector supports.
+    sleep="0" (an earlier attempt) let the loop run at phyphox's internal
+    floor (~100 Hz) for the tightest possible network timing, but that loop
+    also recomputes AudioPower every iteration (squaring/integrating/log
+    over the 4800-sample Audio buffer) - running that ~10x more often than
+    the original 10 Hz starved iOS's stricter real-time audio engine,
+    breaking the audio sensor for iPhone users (Android tolerated it fine).
+    Tying sleep to 1/rate keeps the audio-processing load much closer to
+    the original baseline while still letting the network interval ramp up
+    with the requested frequency.
     """
     analysis_element = root.find('p:analysis', ns)
     if analysis_element is not None:
-        analysis_element.set('sleep', '0')
+        analysis_element.set('sleep', str(round(1.0 / rate, 6)))
 
 def _update_info_view(root, ns, address, topic, rate, enable_light, enable_pressure, enable_depth, enable_magnetometer, enable_color):
     """Updates the info view with the current settings in a single, compact line."""
@@ -271,7 +272,7 @@ def generate_phyphox_file(address, topic, rate, exp_id, enable_light, enable_pre
 
         _set_title(root, ns, exp_id)
         connection_element = _set_mqtt_connection(root, ns, address, topic, rate)
-        _set_analysis_sleep(root, ns)
+        _set_analysis_sleep(root, ns, rate)
         _set_all_sensor_rates(root, ns, rate)
         _update_info_view(root, ns, address, topic, rate, enable_light, enable_pressure, enable_depth, enable_magnetometer, enable_color)
 
